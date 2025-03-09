@@ -1,0 +1,187 @@
+[
+    {
+        "id": "82e1289b9a80dab0",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "configure",
+        "props": [
+            {
+                "p": "maxValue",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "p": "timeout",
+                "v": "4",
+                "vt": "num"
+            },
+            {
+                "p": "repeat",
+                "v": "8",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 980,
+        "y": 260,
+        "wires": [
+            [
+                "3660ee0645ed3fe0"
+            ]
+        ]
+    },
+    {
+        "id": "3660ee0645ed3fe0",
+        "type": "ton-alarm",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "maxValue": "",
+        "minValue": "",
+        "timeout": "",
+        "repeat": "",
+        "x": 1180,
+        "y": 320,
+        "wires": [
+            [
+                "84790309c1d5167d",
+                "7d69c225f6212e89"
+            ],
+            [
+                "9a3601e689692a44",
+                "036490b5b24c5a76"
+            ]
+        ]
+    },
+    {
+        "id": "9acc60aef96396d7",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "2",
+        "payloadType": "num",
+        "x": 970,
+        "y": 380,
+        "wires": [
+            [
+                "3660ee0645ed3fe0"
+            ]
+        ]
+    },
+    {
+        "id": "77708717602e58bd",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 970,
+        "y": 340,
+        "wires": [
+            [
+                "3660ee0645ed3fe0"
+            ]
+        ]
+    },
+    {
+        "id": "84790309c1d5167d",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "payload",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1400,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "9a3601e689692a44",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "payload",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1400,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "7d69c225f6212e89",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "complete msg",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1420,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "036490b5b24c5a76",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "complete msg",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1420,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "1b134d8836f9ebc8",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Configuring maxValue=1\\n Alarm condition is met when payload=2, but it takes 4 seconds to get `true` on output 1 for each msg on input.\\n As soon as delay time is elapsed on positive alarm condition, a message is output on 2\\n If alarm condition is kept, on a timed basis every 'delay' seconds a `true` is output on 2  \\n When payload=0, alarm condition is cleared. A `false` is output on 1 and 2",
+        "info": "",
+        "x": 1230,
+        "y": 100,
+        "wires": []
+    }
+]

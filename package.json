@@ -1,0 +1,31 @@
+{
+    "name": "@jmaza_itix/ton-alarm",
+    "version": "1.0.1",
+    "description": "Alarm monitoring with timer logic",
+    "dependencies": {},
+    "main": "ton-alarm.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "node-red",
+        "node-red-contrib",
+        "alarm",
+        "timer",
+        "itix"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jmaza-itix/node-red-contrib-ton-alarm.git"
+    },
+    "author": "Julian Maza <j.maza@itix.es>",
+    "homepage": "https://github.com/jmaza-itix/node-red-contrib-ton-alarm",
+    "license": "MIT",
+    "node-red": {
+        "version": ">=2.0.0",
+        "nodes": {
+            "ton-alarm": "ton-alarm.js"
+        },
+        "examples": "examples"
+    }
+}

@@ -1,0 +1,53 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ton-alarm', {
+        category: 'function',
+        color: '#bbbbbb',
+        defaults: {
+            name: { value: "" },
+            maxValue: { value: null, validate:RED.validators.number() },
+            minValue: { value: null, validate:RED.validators.number() },
+            timeout: { value: 60, validate:RED.validators.number() },
+            repeat: { value: null, validate:RED.validators.number() }
+        },
+        inputs: 1,
+        inputLabels: ["input"],
+        outputs: 2,
+        outputLabels: ["sync output", "async output"],
+        icon: "font-awesome/fa-bomb",
+        label: function () {
+            return this.name || "ton-alarm";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="ton-alarm">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxValue"><i class="fa fa-arrow-up"></i> MaxValue</label>
+        <input type="text" id="node-input-maxValue" placeholder="MaxValue permitted">
+    </div>
+    <div class="form-row">
+        <label for="node-input-minValue"><i class="fa fa-arrow-down"></i> MinValue</label>
+        <input type="text" id="node-input-minValue" placeholder="MinValue permitted">
+    </div>
+    <div class="form-row">
+        <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+        <input type="text" id="node-input-timeout" placeholder="Timeout interval in seconds">
+    </div>
+    <div class="form-row">
+        <label for="node-input-repeat"><i class="fa fa-clock-o"></i> Repeat</label>
+        <input type="text" id="node-input-repeat" placeholder="Repeat interval in seconds">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="ton-alarm">
+    <p>Alarm node that monitors if value in payload is inside/outside the
+        given range during a certain filtering time. After that time, an
+        asynchronous message is sent by the second output.
+    </p>
+    <p>If value&gt;MaxValue or value&lt;MinValue the alarma is active</p>
+    <p>If MinValue&gt;=value&lt;=MaxValue the alarm is reset</p>
+</script>
