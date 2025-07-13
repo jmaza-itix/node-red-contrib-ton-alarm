@@ -35,8 +35,11 @@ module.exports = function (RED) {
     node.isAlarmTriggered = false;
     node.isRepeating = null;
     node.lastValue = null;
-    node.preCondition = null;
+    node.fallingAlarmTriggered = false;
+    node.preAlarmTriggered = null;
     node.disabled = node.context().get("disabled") || false;
+    node.preDisabled = null;
+    node.publishPendingDisabled = false;
     let parsedMinValue =
       typeof config.minValue === "boolean"
         ? config.minValue
@@ -86,23 +89,27 @@ module.exports = function (RED) {
      * Updates values of alarmL, alarmH and alarm on object
      */
     function updateAlarms() {
-      const { minValue, maxValue, lastValue, isAlarmTriggered } = node;
+      const { minValue, maxValue, lastValue, isAlarmTriggered, disabled } =
+        node;
 
       const isMinValid = typeof minValue === "number";
       const isMaxValid = typeof maxValue === "number";
 
       node.isAlarmL =
-        isMinValid &&
-        lastValue < minValue &&
-        isAlarmTriggered &&
-        !node.disabled;
+        isMinValid && lastValue < minValue && isAlarmTriggered && !disabled;
       node.isAlarmH =
-        isMaxValid &&
-        lastValue > maxValue &&
-        isAlarmTriggered &&
-        !node.disabled;
+        isMaxValid && lastValue > maxValue && isAlarmTriggered && !disabled;
 
       node.alarm = node.isAlarmL || node.isAlarmH;
+    }
+
+    /**
+     * Resets the current status of the node and updates Status
+     */
+    function resetState() {
+      resetTimer();
+      resetRepeatTimer();
+      updateStatus();
     }
     //#endregion
 
@@ -120,15 +127,13 @@ module.exports = function (RED) {
     function sendMsg(syncSend = null) {
       updateAlarms();
 
-      node.isCondition = isAlarm(node.lastValue);
-      let msg = {
+      let outputMsg = {
         payload: node.isAlarmTriggered,
         isDisabled: node.disabled,
         isCondition: node.isCondition,
         isAlarmL: node.isAlarmL,
         isAlarmH: node.isAlarmH,
-        isSyncMsg: syncSend != null,
-        isRepeating: node.isRepeating,
+        isRepeating: node.isRepeating || false,
         lastValue: node.lastValue,
         minValue: node.minValue,
         maxValue: node.maxValue,
@@ -137,28 +142,26 @@ module.exports = function (RED) {
         timerId: node.timerId,
         timer2Id: node.timer2Id,
       };
-      var changedCondition = node.preCondition !== node.isCondition;
-      node.preCondition = node.isCondition;
 
-      if (node.disabled) {
-        node.send([msg, msg]);
-        return;
+      var syncMsg = null;
+      var asyncMsg = null;
+
+      if (syncSend || node.publishPendingDisabled) {
+        syncMsg = RED.util.cloneMessage(outputMsg);
+        syncMsg.isSyncMsg = true;
       }
-
-      const outputs = [null, null];
+      if (!syncSend || node.publishPendingDisabled) {
+        asyncMsg = RED.util.cloneMessage(outputMsg);
+        asyncMsg.isSyncMsg = false;
+      }
+      node.publishPendingDisabled = false;
 
       if (syncSend) {
-        outputs[0] = msg; // Synchronous on 1st output
+        // Send msg on sync output
+        syncSend([syncMsg, asyncMsg]);
       } else {
-        outputs[1] = msg; // Asynchronous on 2nd output
-      }
-
-      if (changedCondition) {
-        outputs[1] = msg; // Asynchronous on 2nd output
-      }
-
-      if (outputs[0] || outputs[1]) {
-        node.send(outputs);
+        // Send msg on async output
+        node.send([syncMsg, asyncMsg]);
       }
     }
     //#endregion
@@ -171,13 +174,8 @@ module.exports = function (RED) {
      * It is called once when the alarm condition is met
      * and the configured time is get.
      *
-     * This function does:
-     * - start of repeating timer
-     * - send async message (will have isRepeating = false)
-     * - update node status on screen with a red ring
      */
     function onTimer() {
-      resetTimer();
       node.isAlarmTriggered = true;
       startRepeatTimer();
       sendMsg();
@@ -208,10 +206,6 @@ module.exports = function (RED) {
      * It is called when the alarm condition is met on a repeating basis
      * and the configured repeating time is get.
      *
-     * This function does:
-     * - set node.isRepeating to true
-     * - send async message (will have isRepeating = true)
-     * - update node status on screen with a red dot
      */
     function onRepeat() {
       node.isRepeating = true;
@@ -253,31 +247,33 @@ module.exports = function (RED) {
      * If any component is null or invalid, it will be ignored
      *
      * @param {object} msg - message received from nodered flow
-     * @returns true if msg has to be forwarded (payload present) or nothing if no payload received
+     * @returns true if msg should be published
      *
      */
     function parseMsg(msg) {
       if (msg.disable != null || msg.disabled != null) {
         node.disabled = msg.disable == true || msg.disabled == true;
-        node.context().set("disabled", node.disabled); // persist
-        updateStatus();
-      }
+        node.context().set("disabled", node.disabled);
 
-      if (node.disabled) {
-        node.isAlarmTriggered = false;
-        resetTimer();
-        resetRepeatTimer();
-        updateStatus();
-        node.lastValue = null;
-        node.isCondition = false;
-        return true;
+        // Change on Disabled status
+        if (node.preDisabled !== node.disabled) {
+          node.preDisabled = node.disabled;
+          node.publishPendingDisabled = true;
+
+          if (node.disabled) {
+            node.isAlarmTriggered = false;
+            node.lastValue = null;
+            node.isCondition = false;
+            resetState();
+          }
+          updateStatus();
+          return true;
+        }
       }
 
       if (msg.payload == "reset") {
         node.isAlarmTriggered = false;
-        resetTimer();
-        resetRepeatTimer();
-        updateStatus();
+        resetState();
         return;
       }
 
@@ -285,6 +281,7 @@ module.exports = function (RED) {
         let parsedMin = parseFloat(msg.minValue);
         node.minValue = isNaN(parsedMin) ? null : parsedMin;
       }
+
       if (msg.maxValue != null) {
         let parsedMax = parseFloat(msg.maxValue);
         node.maxValue = isNaN(parsedMax) ? null : parsedMax;
@@ -324,6 +321,7 @@ module.exports = function (RED) {
       var txt = String(msg.payload)
         .replace(/^"(.*)"$/, "$1")
         .trim();
+
       var value =
         typeof msg.payload === "boolean"
           ? msg.payload
@@ -341,10 +339,8 @@ module.exports = function (RED) {
             startTimer();
           }
         } else {
-          resetTimer();
-          resetRepeatTimer();
+          resetState();
           node.isAlarmTriggered = false;
-          updateStatus();
         }
         return true;
       }
@@ -386,6 +382,7 @@ module.exports = function (RED) {
       }
       done();
     });
+
     this.on("close", function (removed, done) {
       resetTimer();
       resetRepeatTimer();

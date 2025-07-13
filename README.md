@@ -57,6 +57,7 @@ To _delete_ a config value, just assign it a `null` like `msg.MinValue = null`
 * `msg.disable = true`: Disables the alarm logic and forces both outputs to emit a "false" state
 * `msg.disable = false`: Re-enables the alarm based on the last received value.
 
+Disabling the alarm will set lastValue to _null_. Alarm condition won't be calculated when `msg.disable=false` unless a new msg.payload is received
 
 ## Output Messages
 The node emits messages on __two outputs__:
@@ -103,7 +104,7 @@ The node emits messages on __two outputs__:
 ### Alarm Disabling Use Case
 In some cases, the alarm should be conditionaly disabled. For example, when a device like a cooling chamber is powered off the temperature may rise, but no alarm should be triggered.
 * Send `msg.disable = true` to __temporarily disable__ the alarm
-    Both outputs will emit a message with `payload = false` and `disabled = true`
+    Both outputs will emit a message with `payload = false` and `isDisabled = true`
 * Send `msg.disable = false` to __re-enable__ alarm checks
 
 
