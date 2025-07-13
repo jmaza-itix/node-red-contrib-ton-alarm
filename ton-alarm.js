@@ -28,13 +28,15 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
 
     var node = this;
+
     node.payload = null;
     node.isAlarmL = null;
     node.isAlarmH = null;
     node.isAlarmTriggered = false;
     node.isRepeating = null;
     node.lastValue = null;
-    node.disabled = false;
+    node.preCondition = null;
+    node.disabled = node.context().get("disabled") || false;
     let parsedMinValue =
       typeof config.minValue === "boolean"
         ? config.minValue
@@ -135,12 +137,23 @@ module.exports = function (RED) {
         timerId: node.timerId,
         timer2Id: node.timer2Id,
       };
+      var changedCondition = node.preCondition !== node.isCondition;
+      node.preCondition = node.isCondition;
 
       if (node.disabled) {
         node.send([msg, msg]);
-      } else if (syncSend != null)
+        return;
+      }
+
+      if (syncSend) {
         syncSend([msg, null]); // Synchronous on 1st output
-      else node.send([null, msg]); // Asynchronous on 2nd output
+      } else {
+        node.send([null, msg]); // Asynchronous on 2nd output
+      }
+
+      if (changedCondition) {
+        node.send([null, msg]); // Asynchronous on 2nd output
+      }
     }
     //#endregion
 
@@ -238,8 +251,9 @@ module.exports = function (RED) {
      *
      */
     function parseMsg(msg) {
-      if (msg.disabled != null) {
+      if (msg.disable != null || msg.disabled != null) {
         node.disabled = msg.disable == true || msg.disabled == true;
+        node.context().set("disabled", node.disabled); // persist
         updateStatus();
       }
 
@@ -335,23 +349,28 @@ module.exports = function (RED) {
     function updateStatus() {
       if (node.disabled) {
         node.status({ fill: "gray", shape: "dot", text: "disabled" });
-      } else if (node.isAlarmTriggered) {
+        return;
+      }
+
+      if (node.isAlarmTriggered) {
         if (node.isRepeating) {
           node.status({ fill: "red", shape: "dot", text: "alarm repeating" });
         } else {
           node.status({ fill: "red", shape: "ring", text: "alarm active" });
         }
-      } else {
-        if (node.isCondition) {
-          node.status({
-            fill: "yellow",
-            shape: "ring",
-            text: "alarm condition",
-          });
-        } else {
-          node.status({});
-        }
+        return;
       }
+
+      if (node.isCondition) {
+        node.status({
+          fill: "yellow",
+          shape: "ring",
+          text: "alarm condition",
+        });
+        return;
+      }
+
+      node.status({});
     }
 
     this.on("input", function (msg, send, done) {
