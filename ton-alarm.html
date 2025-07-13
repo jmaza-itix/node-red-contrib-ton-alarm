@@ -4,10 +4,10 @@
         color: '#bbbbbb',
         defaults: {
             name: { value: "" },
-            maxValue: { value: null, validate:RED.validators.number() },
-            minValue: { value: null, validate:RED.validators.number() },
-            timeout: { value: 60, validate:RED.validators.number() },
-            repeat: { value: null, validate:RED.validators.number() }
+            maxValue: { value: null, validate: RED.validators.number() },
+            minValue: { value: null, validate: RED.validators.number() },
+            timeout: { value: 60, validate: RED.validators.number() },
+            repeat: { value: null, validate: RED.validators.number() }
         },
         inputs: 1,
         inputLabels: ["input"],
@@ -44,10 +44,28 @@
 </script>
 
 <script type="text/html" data-help-name="ton-alarm">
-    <p>Alarm node that monitors if value in payload is inside/outside the
-        given range during a certain filtering time. After that time, an
-        asynchronous message is sent by the second output.
-    </p>
-    <p>If value&gt;MaxValue or value&lt;MinValue the alarma is active</p>
-    <p>If MinValue&gt;=value&lt;=MaxValue the alarm is reset</p>
+  <p>The <b>ton-alarm</b> node monitors a numeric or boolean input and raises an alarm if the value remains above or below specified thresholds for a configurable time.</p>
+
+  <h3>Inputs</h3>
+  <ul>
+    <li><code>msg.payload</code> (number or boolean): Value to evaluate</li>
+    <li><code>msg.disable</code>: Set to <code>true</code> to temporarily disable alarm logic</li>
+    <li><code>msg.payload = "reset"</code>: Resets alarms and timers</li>
+  </ul>
+
+  <h3>Outputs</h3>
+  <ul>
+    <li><b>Output 1</b>: Sync message (on every input)</li>
+    <li><b>Output 2</b>: Async message (on alarm or repeat interval)</li>
+  </ul>
+
+  <h3>Configuration</h3>
+  <ul>
+    <li><b>minValue</b>: Optional low threshold</li>
+    <li><b>maxValue</b>: Optional high threshold</li>
+    <li><b>timeout</b>: Delay before triggering alarm</li>
+    <li><b>repeat</b>: Interval for repeating alarm messages</li>
+  </ul>
+
+  <p>For full documentation and examples, visit the <a href="https://github.com/youruser/ton-alarm-node" target="_blank">project README</a>.</p>
 </script>
