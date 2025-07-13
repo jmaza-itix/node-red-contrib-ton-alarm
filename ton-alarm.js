@@ -145,14 +145,20 @@ module.exports = function (RED) {
         return;
       }
 
+      const outputs = [null, null];
+
       if (syncSend) {
-        syncSend([msg, null]); // Synchronous on 1st output
+        outputs[0] = msg; // Synchronous on 1st output
       } else {
-        node.send([null, msg]); // Asynchronous on 2nd output
+        outputs[1] = msg; // Asynchronous on 2nd output
       }
 
       if (changedCondition) {
-        node.send([null, msg]); // Asynchronous on 2nd output
+        outputs[1] = msg; // Asynchronous on 2nd output
+      }
+
+      if (outputs[0] || outputs[1]) {
+        node.send(outputs);
       }
     }
     //#endregion
